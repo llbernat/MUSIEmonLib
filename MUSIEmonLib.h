@@ -1,100 +1,103 @@
 /*
-  Emon.h - Library for openenergymonitor
-  Created by Trystan Lea, April 27 2010
-  GNU GPL
-  modified to use up to 12 bits ADC resolution (ex. Arduino Due)
-  by boredman@boredomprojects.net 26.12.2013
-  Low Pass filter for offset removal replaces HP filter 1/1/2015 - RW
+  MUSIEmonLib.cpp - Library for electric power monitoring
+  Created by Lluís Bernat, May 16 2021
+  GNU GPL License
+
+  Depends on the fantastic EmonLib library 
+  that you can install from 
+  Arduino IDE library manager or from 
+  https://github.com/openenergymonitor/EmonLib.git
+
 */
 
-#ifndef MUSIEmonLib_h
-#define MUSIEmonLib_h
+#ifndef _MUSIEmonLib_h_
+#define _MUSIEmonLib_h_
 
 #if defined(ARDUINO) && ARDUINO >= 100
-
 #include "Arduino.h"
-
 #else
-
 #include "WProgram.h"
-
 #endif
 
-// define theoretical vref calibration constant for use in readvcc()
-// 1100mV*1024 ADC steps http://openenergymonitor.org/emon/node/1186
-// override in your code with value for your specific AVR chip
-// determined by procedure described under "Calibrating the internal reference voltage" at
-// http://openenergymonitor.org/emon/buildingblocks/calibration
-#ifndef READVCC_CALIBRATION_CONST
-#define READVCC_CALIBRATION_CONST 1126400L
-#endif
+// The base class is defined into: 
+//
+#include "EmonLib.h"
 
-// to enable 12-bit ADC resolution on Arduino Due,
-// include the following line in main sketch inside setup() function:
-//  analogReadResolution(ADC_BITS);
-// otherwise will default to 10 bits, as in regular Arduino-based boards.
-#if defined(__arm__)
-#define ADC_BITS    12
-#else
-#define ADC_BITS    10
-#endif
+// Print (Serial) debug messages? 
+//
+#define _DEBUG_MUSIEmonLib_
 
-#define ADC_COUNTS  (1<<ADC_BITS)
+// Number of samples to test ADC speed.
+// Increase for better accuracy 
+//
+#define _CALC_ADC_SPEED_ 500
 
+// Max number of samples to waste in training the DC filter
+//
+#define _MAX_TRAIN_ 5000
 
-class EnergyMonitor
+// Our class defines some additional functions and behaviours
+//
+class MUSIEnergyMonitor: public EnergyMonitor
 {
   public:
+    //
+    // New methods: 
+    //
+    /*
+    unsigned long setDuration(unsigned long DURATION)
 
-    void voltage(unsigned int _inPinV, double _VCAL, double _PHASECAL);
+      Allows to sample by the desired ms DURATION
+
+      Returns the equivalent number of samples
+      (also retriveable using getNumSamples() method)
+    */
+    unsigned long setDuration(unsigned long _DURATION);
+    /*
+      unsigned long getNumSamples()
+    
+      Getter for the equivalent duration in number of samples
+    */
+    unsigned long getNumSamples();
+    /*
+      void tranFilter(void)
+
+      Trains the reject DC filter to obtain better accuracy 
+      on first samples and avoid outliers
+    */
+    void trainFilter();
+    /*
+      double calcIrms(void)
+
+      New overcharged method to sample current 
+      by the previously setted duration
+      (see setDuration() method)
+    */
+    double calcIrms();
+    /*
+      double calcIrms(unsigned int NUMBER_OF_SAMPLES);
+
+      The original calcIrms function (below) left untouched, 
+      but we overcharge the method to (re)define it without 
+      arguments to mean that we wish sample for the previously 
+      established duration by setDuration()
+    */
+    double calcIrms(unsigned int _NUMBER_OF_SAMPLES);
+    /*
+      void current(unsigned int _inPinI, double _ICAL)
+      
+      Redefined constructor to accommodate new internal variables
+      DURATION and NUM_SAMPLES values
+    */
     void current(unsigned int _inPinI, double _ICAL);
-
-    void voltageTX(double _VCAL, double _PHASECAL);
-    void currentTX(unsigned int _channel, double _ICAL);
-
-    void calcVI(unsigned int crossings, unsigned int timeout);
-    double calcIrms(unsigned int NUMBER_OF_SAMPLES);
-    void serialprint();
-
-    long readVcc();
-    //Useful value variables
-    double realPower,
-      apparentPower,
-      powerFactor,
-      Vrms,
-      Irms;
-
   private:
-
-    //Set Voltage and current input pins
-    unsigned int inPinV;
-    unsigned int inPinI;
-    //Calibration coefficients
-    //These need to be set in order to obtain accurate results
-    double VCAL;
-    double ICAL;
-    double PHASECAL;
-
-    //--------------------------------------------------------------------------------------
-    // Variable declaration for emon_calc procedure
-    //--------------------------------------------------------------------------------------
-    int sampleV;                        //sample_ holds the raw analog read value
-    int sampleI;
-
-    double lastFilteredV,filteredV;          //Filtered_ is the raw analog value minus the DC offset
-    double filteredI;
-    double offsetV;                          //Low-pass filter output
-    double offsetI;                          //Low-pass filter output
-
-    double phaseShiftedV;                             //Holds the calibrated phase shifted voltage.
-
-    double sqV,sumV,sqI,sumI,instP,sumP;              //sq = squared, sum = Sum, inst = instantaneous
-
-    int startV;                                       //Instantaneous voltage at start of sample window.
-
-    boolean lastVCross, checkVCross;                  //Used to measure number of times threshold is crossed.
-
-
+    // Now we can set the duration of the sampling!
+    unsigned long DURATION;
+    // But we need to translate the DURATION to 
+    // a number of samples, that will depend on 
+    // our arduino speed (CPU and ADC)
+    unsigned long NUM_SAMPLES;
+    // This translation (a try and calc) is made by the setDuration() method
 };
 
 #endif

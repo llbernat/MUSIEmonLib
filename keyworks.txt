@@ -12,4 +12,13 @@ MUSIEnergyMonitor	KEYWORD1
 # Methods and Functions (KEYWORD2)
 #######################################
 
-calcIrms 	KEYWORD2
+voltage     	KEYWORD2
+current 		KEYWORD2
+voltageTX		KEYWORD2
+currentTX		KEYWORD2
+calcVI  		KEYWORD2
+calcIrms    	KEYWORD2
+serialprint 	KEYWORD2
+readVcc     	KEYWORD2
+setDuration 	KEYWORD2
+trainFilter 	KEYWORD2
