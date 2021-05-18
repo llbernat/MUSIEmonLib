@@ -39,7 +39,7 @@ its (github) source.
 
 ### New or refurbished methods
 
-* current((unsigned int inPinI, double ICAL): original EmonLib behaviour, but also initializes new needed privates variables
+* current(unsigned int inPinI, double ICAL): original EmonLib behaviour, but also initializes new needed private variables
 * setDuration(unsigned long DURATION): tells MUSIEmonLib instance to sample by time (ms)
 * getNumSamples(void): gets the number of samples needed to achieve sampling duration
 * trainFilter(void): trains the internal software DC filter to reduce outliers in initial IRMS calculations
