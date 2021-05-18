@@ -15,10 +15,10 @@ University of the Balearic Islands (Spain)
 MUSIEmonLib enhances EmonLib, because allows to: 
 
 * Reduce initial outliers by training the instance 
-using its new trainFilter() method.
+using its new class trainFilter() method.
 
 * Now you can also sample by time instead of by the number of samples. 
-You only need to call the function setDuration(), 
+You only need to call the method setDuration(), 
 passing it the desired duration in milliseconds.
 
 See the included example to view this excinting new features in action.
